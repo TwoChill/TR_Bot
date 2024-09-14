@@ -3,23 +3,17 @@ import data_manager as dm
 
 DEBUG = True  # Control debug mode; set to True for testing with print statements and plots.
 TICKER = "BTC-USD"
-PERIOD = "60d" # Lookback period
+PERIOD = "60d"  # Lookback period
 
 # Control debug mode in data_manager
 dm.DEBUG = DEBUG
 
-# Check for data folder based on ticker
+# Get initial historical data if the data folder is not present
 if not os.path.exists(TICKER):
     if DEBUG:
         print(f"Creating directory for {TICKER}")
-
     # Fetch initial historical data if the data folder is empty or incomplete
     dm.get_all_data(TICKER, PERIOD)
-
-
-# TODO: Pull data if necessary from start
-# - Determine the start date for data collection.
-# - Use `data_manager` functions to fetch initial historical data if the data folder is empty or incomplete.
 
 # TODO: Asynchronously fetch new data when necessary
 # - Implement asynchronous fetching for each timeframe using appropriate data_manager functions.
@@ -44,18 +38,18 @@ if not os.path.exists(TICKER):
 # - Conditionally display these plots only when DEBUG is set to True.
 
 # Initialize variables for support and resistance levels on each timeframe.
-recent_weekly_resistance = int()
-recent_weekly_support = int()
-recent_daily_resistance = int()
-recent_daily_support = int()
-recent_4h_resistance = int()
-recent_4h_support = int()
-recent_1h_resistance = int()
-recent_1h_support = int()
-recent_30m_resistance = int()
-recent_30m_support = int()
-recent_15m_resistance = int()
-recent_15m_support = int()
+# recent_weekly_resistance = int()
+# recent_weekly_support = int()
+# recent_daily_resistance = int()
+# recent_daily_support = int()
+# recent_4h_resistance = int()
+# recent_4h_support = int()
+# recent_1h_resistance = int()
+# recent_1h_support = int()
+# recent_30m_resistance = int()
+# recent_30m_support = int()
+# recent_15m_resistance = int()
+# recent_15m_support = int()
 
 # TODO: Add New Support and Resistance Levels for Each Timeframe
 # - Calculate new support and resistance levels using recent data points.
