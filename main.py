@@ -4,11 +4,10 @@ from data_manager import DataManager
 
 DEBUG = True  # Control debug mode; set to True for testing with print statements and plots.
 TICKER = "BTC-USD"
-PERIOD = "60d"  # Lookback period
 INTERVALS = ['5m', '15m', '30m', '1h', '4h', '1d', '1wk']
 
 # Initialize DataManager instance
-dm = DataManager(TICKER, PERIOD)
+dm = DataManager(TICKER)
 dm.DEBUG = DEBUG  # Set debug mode
 
 # Get initial historical data if the data folder is not present
@@ -19,8 +18,6 @@ if not os.path.exists(TICKER):
     # Create directory if it doesn't exist
     dm.create_directory()
 
-# Fetch initial historical data
-dm.fetch_new_data(TICKER, PERIOD, INTERVALS)
 
 # Start the asynchronous periodic update
 asyncio.run(dm.start_auto_fetch_data())

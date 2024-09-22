@@ -1,62 +1,42 @@
 import asyncio
+import time
+
 import yfinance as yf
 import pandas as pd
 import os
 import glob
 from datetime import datetime, timedelta
+from constants import RED, GREEN, NEGATIVE, BOLD, UNDERLINE, END, main_DEBUG
 
-# Color constants for console output
-BLACK = "\033[0;30m"
-RED = "\033[0;31m"
-GREEN = "\033[0;32m"
-BROWN = "\033[0;33m"
-BLUE = "\033[0;34m"
-PURPLE = "\033[0;35m"
-CYAN = "\033[0;36m"
-LIGHT_GRAY = "\033[0;37m"
-DARK_GRAY = "\033[1;30m"
-LIGHT_RED = "\033[1;31m"
-LIGHT_GREEN = "\033[1;32m"
-YELLOW = "\033[1;33m"
-LIGHT_BLUE = "\033[1;34m"
-LIGHT_PURPLE = "\033[1;35m"
-LIGHT_CYAN = "\033[1;36m"
-LIGHT_WHITE = "\033[1;37m"
-BOLD = "\033[1m"
-FAINT = "\033[2m"
-ITALIC = "\033[3m"
-UNDERLINE = "\033[4m"
-BLINK = "\033[5m"
-NEGATIVE = "\033[7m"
-CROSSED = "\033[9m"
-END = "\033[0m"
 
 class DataManager:
-    DEBUG = False
 
-    def __init__(self, ticker, period):
+    def __init__(self, ticker):
         """
         Initializes the DataManager with a specific ticker and period.
 
         Args:
             ticker (str): The symbol of the financial instrument (e.g., "BTC-USD").
-            period (str): The historical data period (e.g., "60d" for the last 60 days).
         """
         self.ticker = ticker.upper()
-        self.period = period.lower()
         self.intervals = ['5m', '15m', '30m', '1h', '4h', '1d', '1wk']
-        self.last_lines = {}  # Dictionary to store the last line of CSV data for each save moment
+        self.period_map = {
+            '1wk': '1y',
+            '1d': '6mo',
+            '1h': '3mo',
+            '5m': '1d',
+            '15m': '2d',
+            '30m': '5d'
+        }
 
     def create_directory(self):
         """
         Creates a directory for the given ticker if it doesn't exist.
         """
         if not os.path.exists(self.ticker):
-            if self.DEBUG:
-                print(f"{CYAN}Creating directory for symbol: {self.ticker}{END}")
             os.makedirs(self.ticker)
 
-    def fetch_new_data(self, symbol, period, intervals):
+    async def periodic_fetch_data(self, symbol, intervals):
         """
         Fetches new historical data for each specified interval, removes any existing data file,
         and creates a new data file with the updated data.
@@ -68,64 +48,60 @@ class DataManager:
 
         This method iterates through each interval, fetches the corresponding historical data,
         deletes any existing data file for that interval, and saves the new data to a new file.
+        :param symbol:
+        :param intervals:
         """
-        for interval in intervals:
-            if self.DEBUG:
-                print(f"\n{CYAN}Fetching new data for {symbol} for period {period} with interval {interval}{END}")
 
-            # Fetch new data from Yahoo Finance or aggregate for 4-hour data
+        print()
+        for interval in intervals:
             if interval != '4h':
-                data = yf.download(symbol, period=period, interval=interval)
+                fetch_period = self.period_map.get(interval)
+                data = yf.download(symbol, period=fetch_period, interval=interval, progress=False)
+                if main_DEBUG:
+                    print(
+                        f"{RED}{NEGATIVE}DEBUG{END} {GREEN}{BOLD}{NEGATIVE}{GREEN}{BOLD}{NEGATIVE}Success!{END}{GREEN} Fetched {symbol} {interval} data from Yahoo Finance.{END}")
             else:
                 data = self.update_4h_data_from_1h()
+                if main_DEBUG:
+                    print(
+                        f"{RED}{NEGATIVE}DEBUG{END} {GREEN}{BOLD}{NEGATIVE}{GREEN}{BOLD}{NEGATIVE}Success!{END}{GREEN} Fetched {symbol} {interval} data from Yahoo Finance.{END}")
 
             # Check if data was fetched successfully
             if data is None or data.empty:
-                if self.DEBUG:
-                    print(f"{RED}No data fetched for {symbol} with interval {interval}. Skipping.{END}")
+                if main_DEBUG:
+                    print(
+                        f"{RED}{NEGATIVE}DEBUG{END} {RED}No data fetched for {symbol} with interval {interval}. Skipping.{END}")
                 continue
 
-            if self.DEBUG:
-                print(f"{GREEN}Data fetched {NEGATIVE}successfully{END}{GREEN} for {symbol} with {UNDERLINE}{len(data)} records{END}{GREEN}.{END}")
-
-            # Define the filename for storing the data
             filename = os.path.join(symbol, f"{symbol}_{interval}.csv")
-
-            # If file exists, remove it
             if os.path.exists(filename):
                 os.remove(filename)
-                if self.DEBUG:
-                    print(f"{RED}Removed existing file: {filename}{END}")
 
-            # Save the new data to a CSV file
             data.to_csv(filename)
-            if self.DEBUG:
-                print(f"{CYAN}{UNDERLINE}New data saved to file: {filename}{END}")
+        print()
+        # sr_dm.recalculate_senr_levels(intervals)
 
     async def start_auto_fetch_data(self):
         """
         Asynchronously runs the fetch_new_data function every 30 seconds.
         """
         while True:
-            # Get the current time
             now = datetime.now()
 
-            # Calculate the next 30-second interval time
             if now.second < 30:
                 next_run_time = now.replace(second=30, microsecond=0)
             else:
                 next_run_time = (now + timedelta(minutes=1)).replace(second=0, microsecond=0)
 
-            # Calculate the time to sleep until the next run time
             sleep_duration = (next_run_time - datetime.now()).total_seconds()
-            if self.DEBUG:
-                print(f"\nNext update scheduled at: {next_run_time}")
+            if main_DEBUG:
+                print(
+                    f"{RED}{NEGATIVE}DEBUG{END} {GREEN}{BOLD}{NEGATIVE}{GREEN}{BOLD}{NEGATIVE}Fetching Data...{END}")
 
-            # Wait until the next scheduled run time
             await asyncio.sleep(sleep_duration)
 
-            # Run the fetch_new_data function
-            self.fetch_new_data(self.ticker, self.period, self.intervals)
+            # Fetch new data asynchronously for each interval using its specific period
+            await self.periodic_fetch_data(self.ticker, self.intervals)
 
     def update_4h_data_from_1h(self):
         """
@@ -134,8 +110,7 @@ class DataManager:
         This method looks for 1-hour data files, aggregates them into 4-hour intervals,
         and returns the resulting aggregated DataFrame.
         """
-        if self.DEBUG:
-            print(f"\n{PURPLE}Creating 4-hour data from 1-hour data for {self.ticker}{END}")
+
         matching_files_1h = glob.glob(os.path.join(self.ticker, f"*{self.ticker}_1h.csv"))
 
         if matching_files_1h:
@@ -143,8 +118,6 @@ class DataManager:
             data_1h = pd.read_csv(filename_1h, index_col=0, parse_dates=True)
 
             if data_1h.empty:
-                if self.DEBUG:
-                    print(f"{RED}No 1-hour data available for {self.ticker}. Cannot create 4-hour data.{END}")
                 return None  # Return None if no data is available
 
             data_4h = data_1h.resample('4h').agg({
@@ -155,13 +128,48 @@ class DataManager:
                 'Volume': 'sum'
             })
 
-            if self.DEBUG:
-                print(f"{GREEN}4-hour data created successfully from 1-hour data with {UNDERLINE}{len(data_4h)} records{END}{GREEN}.{END}")
-
             # Return the aggregated DataFrame
             return data_4h
         else:
-            if self.DEBUG:
+            if main_DEBUG:
                 print(f"{RED}No 1-hour data files found for {self.ticker}. Cannot create 4-hour data.{END}")
             return None  # Return None if no matching files are found
 
+    async def fetch_data_and_update_levels(self, symbol, period, intervals):
+        """
+        Asynchronously fetches new historical data for each interval and updates support and resistance.
+
+        Args:
+            symbol (str): The symbol of the financial instrument.
+            period (str): The lookback period for historical data.
+            intervals (list): List of data intervals.
+        """
+        for interval in intervals:
+            # Fetch new data from Yahoo Finance or aggregate for 4-hour data
+            fetch_period = self.period_map.get(interval, period)
+            if interval != '4h':
+                data = yf.download(symbol, period=fetch_period, interval=interval, progress=False)
+            else:
+                data = self.update_4h_data_from_1h()
+
+            # Check if data was fetched successfully
+            if data is None or data.empty:
+                if main_DEBUG:
+                    print(f"No data fetched for {symbol} with interval {interval}. Skipping.")
+                continue
+
+            if main_DEBUG:
+                print(f"Data fetched successfully for {symbol} with {len(data)} records.")
+
+            # Define the filename for storing the data
+            filename = os.path.join(symbol, f"{symbol}_{interval}.csv")
+
+            # If file exists, remove it
+            if os.path.exists(filename):
+                os.remove(filename)
+
+            # Save the new data to a CSV file
+            data.to_csv(filename)
+
+            # Update support and resistance levels
+            # sr_dm.update_support_resistance(interval, data)
