@@ -6,8 +6,12 @@ import pandas as pd
 import os
 import glob
 from datetime import datetime, timedelta
-from constants import RED, GREEN, NEGATIVE, BOLD, UNDERLINE, END, main_DEBUG, auto_FETCH, LIGHT_RED
+from constants import RED, GREEN, NEGATIVE, BOLD, UNDERLINE, END, main_DEBUG, auto_FETCH, LIGHT_RED, plot_DEBUG, TICKER, \
+    INTERVALS
+from Plot_Data import PlotManager
 
+
+plm = PlotManager(TICKER, INTERVALS)
 
 class DataManager:
 
@@ -21,12 +25,12 @@ class DataManager:
         self.ticker = ticker.upper()
         self.intervals = ['5m', '15m', '30m', '1h', '4h', '1d', '1wk']
         self.period_map = {
-            '1wk': '6mo',
-            '1d': '3mo',
-            '1h': '1mo',
-            '5m': '1d',
-            '15m': '2d',
-            '30m': '2d'
+            '1wk': '15mo',  # Good
+            '1d': '6mo',    # Good
+            '1h': '2wk',    # Good
+            '5m': '1d',     # Good
+            '15m': '4d',    # Good
+            '30m': '4d'     # Good
         }
 
     def create_directory(self):
@@ -73,15 +77,23 @@ class DataManager:
                         f"{RED}{NEGATIVE}DEBUG{END} {RED}No data fetched for {symbol} with interval {interval}. Skipping.{END}")
                 continue
 
+            # Define the filename for storing the data
             filename = os.path.join(symbol, f"{symbol}_{interval}.csv")
             if os.path.exists(filename):
                 os.remove(filename)
 
             data.to_csv(filename)
         print()
+        # Calculate S en R levels
+        if plot_DEBUG:
+            if main_DEBUG:
+                print(
+                    f"{RED}{NEGATIVE}DEBUG{END} {GREEN}{BOLD}{NEGATIVE}Plotting data...{END}")
+
+            plm.start_plotting()
         # sr_dm.recalculate_senr_levels(intervals)
 
-    async def start_auto_fetch_data(self):
+    async def start_trading_bot(self):
         """
         Asynchronously runs the fetch_new_data function every 30 seconds.
         """
@@ -94,11 +106,8 @@ class DataManager:
                 next_run_time = (now + timedelta(minutes=1)).replace(second=0, microsecond=0)
 
             sleep_duration = (next_run_time - datetime.now()).total_seconds()
-            if auto_FETCH:
-                if main_DEBUG:
-                    print(
-                        f"{RED}{NEGATIVE}DEBUG{END} {GREEN}{BOLD}{NEGATIVE}{GREEN}{BOLD}{NEGATIVE}Fetching Data...{END}")
 
+            if auto_FETCH:
                 await asyncio.sleep(sleep_duration)
 
                 # Fetch new data asynchronously for each interval using its specific period
