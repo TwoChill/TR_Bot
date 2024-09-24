@@ -7,14 +7,14 @@ plot_DEBUG = True                                  # Plots support and resistanc
 senr_DEBUG = True                                  # Prints support and resistance levels
 # senr_DEBUG = False                                   # Prints support and resistance levels
 
-# auto_FETCH = True                                  # Fetch data from Yahoo Finance
-auto_FETCH = False                                   # Fetch data from Yahoo Finance
+auto_FETCH = True                                  # Fetch data from Yahoo Finance
+# auto_FETCH = False                                   # Fetch data from Yahoo Finance
 
 # Ticker symbol
 TICKER = "BTC-USD"
 
 # Data intervals
-INTERVALS = ['5m', '15m', '30m', '1h', '4h', '1d', '1wk']
+INTERVALS = reversed(['5m', '15m', '30m', '1h', '4h', '1d', '1wk'])
 
 # Color constants for console output
 BLACK = "\033[0;30m"
