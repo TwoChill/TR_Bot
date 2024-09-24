@@ -1,31 +1,26 @@
 import asyncio
 import os
 from data_manager import DataManager
+from constants import auto_FETCH, main_DEBUG, RED, NEGATIVE, END, GREEN, BOLD, LIGHT_RED
 
-DEBUG = True  # Control debug mode; set to True for testing with print statements and plots.
 TICKER = "BTC-USD"
 INTERVALS = ['5m', '15m', '30m', '1h', '4h', '1d', '1wk']
 
 # Initialize DataManager instance
 dm = DataManager(TICKER)
-dm.DEBUG = DEBUG  # Set debug mode
 
 # Get initial historical data if the data folder is not present
 if not os.path.exists(TICKER):
-    if DEBUG:
+    if main_DEBUG:
         print(f"Creating directory for {TICKER}")
 
     # Create directory if it doesn't exist
     dm.create_directory()
 
-
 # Start the asynchronous periodic update
 asyncio.run(dm.start_auto_fetch_data())
 
 
-# TODO: Asynchronously fetch new data when necessary
-# - Implement asynchronous fetching for each timeframe using appropriate data_manager functions.
-# - Set up asynchronous tasks to run periodically to check for and fetch new data.
 
 # TODO: Cap Data Lookback for Each Timeframe
 # - Define lookback periods for each timeframe to optimize performance:

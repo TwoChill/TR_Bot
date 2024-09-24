@@ -1,11 +1,14 @@
-main_DEBUG = True                                   # Show Fetching of data from Yahoo Finance
-# main_DEBUG = False                                    # Show Fetching of data from Yahoo Finance
+main_DEBUG = True                                  # Show Fetching of data from Yahoo Finance
+# main_DEBUG = False                                   # Show Fetching of data from Yahoo Finance
 
-# plot_DEBUG = True                                   # Plots support and resistance levels
-plot_DEBUG = False                                    # Plots support and resistance levels
+plot_DEBUG = True                                  # Plots support and resistance levels
+# plot_DEBUG = False                                   # Plots support and resistance levels
 
-# senr_DEBUG = True                                   # Prints support and resistance levels
-senr_DEBUG = False                                 # Prints support and resistance levels
+senr_DEBUG = True                                  # Prints support and resistance levels
+# senr_DEBUG = False                                   # Prints support and resistance levels
+
+# auto_FETCH = True                                  # Fetch data from Yahoo Finance
+auto_FETCH = False                                   # Fetch data from Yahoo Finance
 
 # Ticker symbol
 TICKER = "BTC-USD"

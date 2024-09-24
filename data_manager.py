@@ -6,7 +6,7 @@ import pandas as pd
 import os
 import glob
 from datetime import datetime, timedelta
-from constants import RED, GREEN, NEGATIVE, BOLD, UNDERLINE, END, main_DEBUG
+from constants import RED, GREEN, NEGATIVE, BOLD, UNDERLINE, END, main_DEBUG, auto_FETCH, LIGHT_RED
 
 
 class DataManager:
@@ -21,12 +21,12 @@ class DataManager:
         self.ticker = ticker.upper()
         self.intervals = ['5m', '15m', '30m', '1h', '4h', '1d', '1wk']
         self.period_map = {
-            '1wk': '1y',
-            '1d': '6mo',
-            '1h': '3mo',
+            '1wk': '6mo',
+            '1d': '3mo',
+            '1h': '1mo',
             '5m': '1d',
             '15m': '2d',
-            '30m': '5d'
+            '30m': '2d'
         }
 
     def create_directory(self):
@@ -94,14 +94,18 @@ class DataManager:
                 next_run_time = (now + timedelta(minutes=1)).replace(second=0, microsecond=0)
 
             sleep_duration = (next_run_time - datetime.now()).total_seconds()
-            if main_DEBUG:
-                print(
-                    f"{RED}{NEGATIVE}DEBUG{END} {GREEN}{BOLD}{NEGATIVE}{GREEN}{BOLD}{NEGATIVE}Fetching Data...{END}")
+            if auto_FETCH:
+                if main_DEBUG:
+                    print(
+                        f"{RED}{NEGATIVE}DEBUG{END} {GREEN}{BOLD}{NEGATIVE}{GREEN}{BOLD}{NEGATIVE}Fetching Data...{END}")
 
-            await asyncio.sleep(sleep_duration)
+                await asyncio.sleep(sleep_duration)
 
-            # Fetch new data asynchronously for each interval using its specific period
-            await self.periodic_fetch_data(self.ticker, self.intervals)
+                # Fetch new data asynchronously for each interval using its specific period
+                await self.periodic_fetch_data(self.ticker, self.intervals)
+            else:
+                print(f"{RED}{NEGATIVE}DEBUG{END} {LIGHT_RED}{BOLD}Skip Auto Fetch!\n{END}")
+                await asyncio.sleep(10000)
 
     def update_4h_data_from_1h(self):
         """
