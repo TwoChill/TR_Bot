@@ -1,7 +1,7 @@
 import asyncio
 import os
 from data_manager import DataManager
-from constants import auto_FETCH, main_DEBUG, RED, NEGATIVE, END, GREEN, BOLD, LIGHT_RED
+from constants import auto_FETCH, main_DEBUG, RED, NEGATIVE, END, GREEN, BOLD, LIGHT_RED, PURPLE
 
 TICKER = "BTC-USD"
 INTERVALS = ['5m', '15m', '30m', '1h', '4h', '1d', '1wk']
@@ -10,27 +10,38 @@ INTERVALS = ['5m', '15m', '30m', '1h', '4h', '1d', '1wk']
 dm = DataManager(TICKER)
 
 # Get initial historical data if the data folder is not present
-if not os.path.exists(TICKER):
+try:
+    if not os.path.exists(TICKER):
+        if main_DEBUG:
+            print(f"Creating directory for {TICKER}")
+
+        # Create directory if it doesn't exist
+        dm.create_directory()
+
+    if auto_FETCH:
+        if main_DEBUG:
+            print(
+                f"{RED}{NEGATIVE}DEBUG{END} {GREEN}{BOLD}{NEGATIVE}{GREEN}{BOLD}{NEGATIVE}Fetching Data...{END}")
+        else:
+            print(
+                f"{PURPLE}{BOLD}{NEGATIVE}{NEGATIVE}Running...{END}")
+
+    # Start the asynchronous periodic update
+    asyncio.run(dm.start_trading_bot())
+
+# Catch user interrupts
+except KeyboardInterrupt:
     if main_DEBUG:
-        print(f"Creating directory for {TICKER}")
-
-    # Create directory if it doesn't exist
-    dm.create_directory()
-
-# Start the asynchronous periodic update
-asyncio.run(dm.start_auto_fetch_data())
-
-
-
-# TODO: Cap Data Lookback for Each Timeframe
-# - Define lookback periods for each timeframe to optimize performance:
-#   - Weekly: Last 12 weeks
-#   - Daily: Last 60 days
-#   - 4H: Last 30 days
-#   - 1H: Last 14 days
-#   - 30M: Last 7 days
-#   - 15M: Last 3 days
-# - Implement logic to truncate data to these lookback periods.
+        print(f"\n{RED}{NEGATIVE}DEBUG{END} {RED}{BOLD}{NEGATIVE}Exiting...{END}")
+    else:
+        print(
+            f"\n{RED}{BOLD}{NEGATIVE}{NEGATIVE}Exiting...{END}")
+except Exception as e:
+    if main_DEBUG:
+        print(f"\n{RED}{NEGATIVE}DEBUG{END} {RED}{BOLD}{NEGATIVE}Error:{END} {RED}{e}{END}")
+    else:
+        print(
+            f"\n{RED}{BOLD}{NEGATIVE}Error:{END} {RED}{e}{END}")
 
 # TODO: Plot Recent Support and Resistance Levels on Each Timeframe
 # - Develop a plotting function to visualize support and resistance levels for each timeframe.
