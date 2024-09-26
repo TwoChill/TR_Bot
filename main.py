@@ -43,9 +43,7 @@ except Exception as e:
         print(
             f"\n{RED}{BOLD}{NEGATIVE}Error:{END} {RED}{e}{END}")
 
-# TODO: Plot Recent Support and Resistance Levels on Each Timeframe
-# - Develop a plotting function to visualize support and resistance levels for each timeframe.
-# - Use `matplotlib` or another visualization library to generate these plots.
+
 
 # TODO: Show Metaplots and Add Variables for Resistance and Support if Debug is Set to True
 # - Create a meta-plot function to overlay multiple plots for debugging.
