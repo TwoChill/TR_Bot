@@ -8,7 +8,7 @@ import glob
 from datetime import datetime, timedelta
 from constants import RED, GREEN, NEGATIVE, BOLD, UNDERLINE, END, main_DEBUG, auto_FETCH, LIGHT_RED, plot_DEBUG, TICKER, \
     INTERVALS
-from Plot_Data import PlotManager
+from plot_data import PlotManager
 
 
 plm = PlotManager(TICKER, INTERVALS)
@@ -25,12 +25,12 @@ class DataManager:
         self.ticker = ticker.upper()
         self.intervals = ['5m', '15m', '30m', '1h', '4h', '1d', '1wk']
         self.period_map = {
-            '1wk': '15mo',  # Good
+            '1wk': '1y',  # Good
             '1d': '6mo',    # Good
-            '1h': '2wk',    # Good
+            '1h': '1mo',    # Good
             '5m': '1d',     # Good
-            '15m': '4d',    # Good
-            '30m': '4d'     # Good
+            '15m': '5d',    # Good
+            '30m': '5d'     # Good
         }
 
     def create_directory(self):
@@ -82,14 +82,16 @@ class DataManager:
             if os.path.exists(filename):
                 os.remove(filename)
 
+            # Save the data to a new file
             data.to_csv(filename)
-        print()
+
         # Calculate S en R levels
         if plot_DEBUG:
             if main_DEBUG:
                 print(
-                    f"{RED}{NEGATIVE}DEBUG{END} {GREEN}{BOLD}{NEGATIVE}Plotting data...{END}")
+                    f"\n{RED}{NEGATIVE}DEBUG{END} {GREEN}{BOLD}{NEGATIVE}Plotting data...{END}")
 
+            # Start plotting candlestick charts
             plm.start_plotting()
         # sr_dm.recalculate_senr_levels(intervals)
 
